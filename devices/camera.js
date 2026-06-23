@@ -206,6 +206,14 @@ export default class Camera extends RingPolledDevice {
                 component: 'button',
                 icon: 'mdi:camera'
             },
+            // TEST/DEBUG: play a local WAV to the camera speaker via the active live
+            // stream to validate two-way (talk-back) audio on the device.
+            talk_test: {
+                component: 'button',
+                category: 'diagnostic',
+                name: 'Talk Test',
+                icon: 'mdi:account-voice'
+            },
             motion_detection: {
                 component: 'switch',
                 category: 'config'
@@ -1114,6 +1122,9 @@ export default class Camera extends RingPolledDevice {
             case 'take_snapshot/command':
                 this.takeSnapshot(message)
                 break;
+            case 'talk_test/command':
+                this.sendTalkTest()
+                break;
             case 'stream/command':
                 this.setLiveStreamState(message)
                 break;
@@ -1136,6 +1147,15 @@ export default class Camera extends RingPolledDevice {
                 this.setDingDuration(message, 'motion')
                 break;
         }
+    }
+
+    // TEST/DEBUG: play a local WAV (RING_TALK_TEST_FILE or /data/test.wav) to the
+    // camera speaker via the active live-stream worker, to validate two-way audio
+    // on a real device. The worker no-ops if there is no active live stream.
+    sendTalkTest() {
+        const file = process.env.RING_TALK_TEST_FILE || '/data/test.wav'
+        this.debug(`Talk test: requesting playback of ${file} to camera speaker`)
+        this.data.stream.live.worker.postMessage({ command: 'talk_test', streamData: { file } })
     }
 
     // Set switch target state on received MQTT command message

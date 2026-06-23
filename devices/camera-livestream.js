@@ -26,6 +26,18 @@ parentPort.on("message", async(data) => {
                 stopLiveStream()
             }
             break;
+        case 'talk_test':
+            // TEST/DEBUG: play a local WAV to the camera speaker over the active
+            // session to validate two-way (talk-back) audio on the device.
+            if (liveStream) {
+                const file = (streamData && streamData.file) || '/data/test.wav'
+                parentPort.postMessage({type: 'log_info', data: `Two-way audio TEST: playing ${file} to camera speaker`})
+                liveStream.sendAudioFromFile(file).catch(err =>
+                    parentPort.postMessage({type: 'log_error', data: `Talk test failed: ${err}`}))
+            } else {
+                parentPort.postMessage({type: 'log_error', data: 'Talk test requested but no active live stream'})
+            }
+            break;
     }
 })
 
